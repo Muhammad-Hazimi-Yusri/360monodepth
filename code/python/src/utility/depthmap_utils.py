@@ -114,7 +114,6 @@ def depth_visual_save(depth_data, output_path, overwrite=True):
     im = ax.imshow(depth_data_temp, cmap="turbo")
     cbar = ax.figure.colorbar(im, ax=ax)
     plt.savefig(output_path, dpi=150)
-    # plt.imsave(output_path, dapthe_data_temp, cmap="turbo")
     plt.close(fig)
 
 
@@ -757,7 +756,7 @@ def dispmap_normalize(dispmap, method = "", mask = None):
     :rtype: numpy
     """
     if mask is None:
-        mask = np.ones_like(dispmap, dtype= np.bool)
+        mask = np.ones_like(dispmap, dtype=bool)
 
     dispmap_norm = None
     if method == "naive":

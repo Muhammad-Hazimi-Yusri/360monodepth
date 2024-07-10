@@ -2,7 +2,7 @@
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-
+from matplotlib.colors import ListedColormap
 import metrics
 import json
 import os
@@ -11,6 +11,10 @@ from logger import Logger
 
 log = Logger(__name__)
 log.logger.propagate = False
+
+ideal_range_diff = 317/880
+lower_bound = 0.3198863636
+custom_cmap = ListedColormap(plt.get_cmap("binary")(np.linspace(lower_bound, lower_bound + ideal_range_diff, 256)))
 
 
 class NumpyArrayEncoder(json.JSONEncoder):
@@ -324,17 +328,18 @@ def load_dispmapalign_intermediate_data(filepath, file_format):
 
 
 def save_metrics(output_file, pred_metrics, times, times_header, idx, blending_methods):
-    if idx == 0:
-        with open(output_file, "w") as f:
-            f.write(','.join(list(pred_metrics[0].keys()) + times_header))
-            f.write("\n")
+    if pred_metrics is not None:
+        if idx == 0:
+            with open(output_file, "w") as f:
+                f.write(','.join(list(pred_metrics[0].keys()) + times_header))
+                f.write("\n")
+            f.close()
+    
+        with open(output_file, "a") as f:
+            for idx, key in enumerate(blending_methods):
+                f.write(','.join(list(np.array(list(pred_metrics[idx].values())).astype(str)) + [str(t) for t in times]))
+                f.write("\n")
         f.close()
-
-    with open(output_file, "a") as f:
-        for idx, key in enumerate(blending_methods):
-            f.write(','.join(list(np.array(list(pred_metrics[idx].values())).astype(str)) + [str(t) for t in times]))
-            f.write("\n")
-    f.close()
 
 
 def save_predictions(output_folder, erp_gt_depthmap, erp_rgb_image_data, estimated_depthmap, persp_monodepth, idx=0):
@@ -353,10 +358,11 @@ def save_predictions(output_folder, erp_gt_depthmap, erp_rgb_image_data, estimat
             pred = estimated_depthmap[key]
 
         plt.imsave(os.path.join(output_folder, "{:03}_360monodepth_{}_{}.png".format(idx, persp_monodepth, key)),
-                   pred, cmap="turbo", vmin=vmin, vmax=vmax)
+                   pred, cmap=custom_cmap, vmin=vmin, vmax=vmax)
 
-    plt.imsave(os.path.join(output_folder, "{:03}_GT.png".format(idx)),
-               erp_gt_depthmap, vmin=vmin, vmax=vmax, cmap="turbo")
+    if erp_gt_depthmap is not None:
+        plt.imsave(os.path.join(output_folder, "{:03}_GT.png".format(idx)), erp_gt_depthmap, vmin=vmin, vmax=vmax, cmap=custom_cmap)
+    
     plt.imsave(os.path.join(output_folder, "{:03}_rgb.png".format(idx)), erp_rgb_image_data)
 
     # metrics.visualize_error_maps(pred, erp_gt_depthmap, mask, idx=idx,
