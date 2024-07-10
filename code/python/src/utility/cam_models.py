@@ -318,7 +318,11 @@ def stitch_rgb_image(image_data_list, image_param_list, fisheye_model, subimage_
 
     fisheye_image = np.zeros((fisheye_image_height, fisheye_image_width, channel_number), float)
     fisheye_image_weight = np.zeros((fisheye_image_height, fisheye_image_width), float)
+    fisheye_image = np.zeros((fisheye_image_height, fisheye_image_width, channel_number), float)
+    fisheye_image_weight = np.zeros((fisheye_image_height, fisheye_image_width), float)
     for index in range(0, len(image_data_list)):
+        fisheye_image_weight_subimg = np.zeros((fisheye_image_height, fisheye_image_width), float)
+        fisheye_image_subimage = np.zeros((fisheye_image_height, fisheye_image_width, channel_number), float)
         fisheye_image_weight_subimg = np.zeros((fisheye_image_height, fisheye_image_width), float)
         fisheye_image_subimage = np.zeros((fisheye_image_height, fisheye_image_width, channel_number), float)
 
@@ -342,6 +346,7 @@ def stitch_rgb_image(image_data_list, image_param_list, fisheye_model, subimage_
         available_pixels_list_fov = np.logical_and(points_azimuth_inhfov, points_altitude_invfov)
         available_pixels_list_fov_mat = available_pixels_list_fov.reshape(fisheye_image_height, fisheye_image_width)
 
+        fisheye_2d_points_subimage = fisheye_2d_points[available_pixels_list_fov].astype(int)
         fisheye_2d_points_subimage = fisheye_2d_points[available_pixels_list_fov].astype(int)
 
         # projection to pin-hole image
@@ -430,6 +435,7 @@ def sample_rgb_image(img, model, fov=[60, 60], canvas_size=[400, 400], sample_gr
         # fetch_from = world2cam(world_cs.T, model)
         fetch_from = world2cam_slow(world_cs, model).T
         tangential_img = np.zeros(tuple(canvas_size) + (channel_number,), dtype=float)
+        tangential_img = np.zeros(tuple(canvas_size) + (channel_number,), dtype=float)
 
         for channel in range(0, channel_number):
             tangential_img[:, :, channel] = ndimage.map_coordinates(img[:, :, channel], [fetch_from[:, 1].reshape(canvas_size), fetch_from[:, 0].reshape(canvas_size)], order=1, mode='constant')
@@ -502,10 +508,12 @@ def sample_img(img, cam_model, fov=53, run_midas=False):
     equirect_size = (3, 1000, 2000)     # Size for equirectangular image
     equirect_3D_points, _ = equirect_cam2world(equirect_size[1:])
     equirect_3D_points_rgb = np.zeros((7, equirect_3D_points.shape[-1]), dtype=float)
+    equirect_3D_points_rgb = np.zeros((7, equirect_3D_points.shape[-1]), dtype=float)
     equirect_3D_points_rgb[0, :] = equirect_3D_points[0, :]
     equirect_3D_points_rgb[1, :] = equirect_3D_points[1, :]
     equirect_3D_points_rgb[2, :] = equirect_3D_points[2, :]
 
+    fisheye2equirec = np.zeros((3, equirect_3D_points.shape[-1]), dtype=float)
     fisheye2equirec = np.zeros((3, equirect_3D_points.shape[-1]), dtype=float)
     #   Lines 200-205 is for converting the whole fisheye to equirectangular
     #   Points at the back of the cylinder are mapped to nan
@@ -538,6 +546,7 @@ def sample_img(img, cam_model, fov=53, run_midas=False):
             world_cs = np.linalg.inv(pinhole_camera['rotation']) @ pinhole_cs
 
             #   Fetch RGB from fisheye image to assemble perspective subview
+            fetch_from = world2cam(world_cs.T, cam_model).astype(int)
             fetch_from = world2cam(world_cs.T, cam_model).astype(int)
             fetch_from[:, 0] = np.clip(fetch_from[:, 0], 0, width-1)
             fetch_from[:, 1] = np.clip(fetch_from[:, 1], 0, height-1)
@@ -770,6 +779,7 @@ def generate_camera_orientation(hfov_fisheye, vfov_fisheye, hfov_pinhole, vfov_p
     overlap_area_v = v_index[0] + vfov_pinhole / 2.0 - (v_index[1] - vfov_pinhole / 2.0)
     log.debug("the vertical overlap angle is {}".format(overlap_area_v))
 
+    z_rotation = np.zeros(x_rotation.shape, float)
     z_rotation = np.zeros(x_rotation.shape, float)
     xyz_rotation_array = np.stack((x_rotation, y_rotation, z_rotation), axis=0)
     xyz_rotation_array = xyz_rotation_array.reshape([3, horizontal_size * vertical_size])

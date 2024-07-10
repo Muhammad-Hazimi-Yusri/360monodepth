@@ -170,7 +170,7 @@ def sph2car(theta, phi, radius=1.0):
     :return: +x right, +y down, +z is froward, shape is [3, point_number]
     :rtype: numpy
     """
-    # points_cartesian_3d = np.array.zeros((theta.shape[0],3),np.float)
+    # points_cartesian_3d = np.array.zeros((theta.shape[0],3),float)
     x = radius * np.cos(phi) * np.sin(theta)
     z = radius * np.cos(phi) * np.cos(theta)
     y = -radius * np.sin(phi)

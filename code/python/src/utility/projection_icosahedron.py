@@ -454,7 +454,7 @@ def ico2erp_image(tangent_images, erp_image_height, padding_size=0.0, blender_me
 
     # compute the final optical flow base on weight
     if blender_method == "mean":
-        # erp_flow_weight_mat = np.full(erp_flow_weight_mat.shape, erp_flow_weight_mat.max(), np.float) # debug
+        # erp_flow_weight_mat = np.full(erp_flow_weight_mat.shape, erp_flow_weight_mat.max(), float) # debug
         non_zero_weight_list = erp_weight_mat != 0
         if not np.all(non_zero_weight_list):
             log.warn("the optical flow weight matrix contain 0.")
