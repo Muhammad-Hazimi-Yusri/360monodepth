@@ -36,7 +36,8 @@ WORKDIR "/monodepth"
 COPY . ./
 
 # Setup BoostingMonocularDepth
-RUN git submodule update --init
+#RUN git submodule update --init #replaced this line with below
+RUN if [ -d "BoostingMonocularDepth" ]; then echo "Submodule exists"; else echo "Submodule not found" && exit 1; fi
 RUN cd ./BoostingMonocularDepth/pix2pix/ && mkdir -p checkpoints/mergemodel
 # Midas weights
 #RUN wget https://github.com/isl-org/MiDaS/releases/download/v2_1/model-f6b98070.pt -O ./BoostingMonocularDepth/midas/model.pt
